@@ -1,0 +1,96 @@
+---
+title: "Exercise 3 - Non-parametric Bootstrap"
+author: "Paula Dominguez Gomez"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+library(faraway)
+library(ggplot2)
+library(GGally)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+```
+
+```{r}
+# Load data
+uswages <-uswages
+str(uswages)
+hist(uswages$wage)
+plotHist <- function(columns,bin,colours){
+  par(mfrow = c(4,3))   #Histogram plots to visualize the distribution of the variables.
+  for (i in columns) {
+    hist(uswages[,i], main = paste("Histogram of ", names(uswages)[i]),
+         nclass = bin, las = 1, col = colours, 
+         xlab = paste(names(uswages)[i]))
+  }
+}
+plotHist(c(1:10), c(rep(5,10)), "brown")
+```
+
+```{r}
+# Scatterplot matrix on the variables in the dataset
+ggpairs(uswages) + ggtitle("Weekly Wages of US Male Workers in 1988") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+A=ggplot(uswages)+geom_point(aes(x=educ,y=wage),color="brown")+theme_bw()+xlab("Years of Education")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+B=ggplot(uswages)+geom_point(aes(x=exper,y=wage),color="brown")+theme_bw()+xlab("Years of Experience")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+C=ggplot(uswages)+geom_point(aes(x=race,y=wage),color="brown")+theme_bw()+xlab("Race")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+D=ggplot(uswages)+geom_point(aes(x=smsa,y=wage),color="brown")+theme_bw()+xlab("Standard Metropolitan Area")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+E=ggplot(uswages)+geom_point(aes(x=ne,y=wage),color="brown")+theme_bw()+xlab("North East")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+G=ggplot(uswages)+geom_point(aes(x=we,y=wage),color="brown")+theme_bw()+xlab("West")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+H=ggplot(uswages)+geom_point(aes(x=so,y=wage),color="brown")+theme_bw()+xlab("South")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+I=ggplot(uswages)+geom_point(aes(x=pt,y=wage),color="brown")+theme_bw()+xlab("Part Time/Not")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+J=ggplot(uswages)+geom_point(aes(x=mw,y=wage),color="brown")+theme_bw()+xlab("Midwest")+ylab("Weekly Wages")+theme(panel.grid = element_blank())
+grid.arrange(A,B,C,D,E,G,H,I,J,nrow =3,ncol = 3)
+```
+
+```{r}
+fit <- lm(wage ~ educ + exper, data=uswages)
+summary(fit)
+```
+
+```{r}
+summary(lm(abs(residuals(fit)) ~ fitted(fit)))
+```
+
+```{r}
+# create region, a factor variable based on the four regions ne, mw, so, we
+uswages <- data.frame(uswages,
+                      region =
+                        1*uswages$ne +
+                        2*uswages$mw +
+                        3*uswages$so +
+                        4*uswages$we)
+uswages$region <- factor(uswages$region)
+levels(uswages$region) <- c("ne","mw","so","we")
+
+# analyse influence of region
+m1 = lm(wage ~ educ + exper, data= uswages)
+
+m2 = lm(wage ~region + educ + exper , data= uswages)
+sse.sm = deviance(m1)
+df.sm = df.residual(m1)
+
+sse.bg = deviance(m2)
+df.bg = df.residual(m2)
+
+mse.prt = (sse.sm - sse.bg)/(df.sm - df.bg)
+mse.bg =sse.bg/df.bg
+
+f.ratio_model2 = mse.prt/mse.bg
+f.ratio_model2
+
+p.value1=pf(f.ratio_model2,df.sm-df.bg,df.bg,lower.tail = FALSE)
+p.value1
+```
+
