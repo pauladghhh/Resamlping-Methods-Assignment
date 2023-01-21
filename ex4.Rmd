@@ -18,6 +18,7 @@ library(gridExtra)
 library(grid)
 library(ggplot2)
 library(lattice)
+library(olsrr)
 ```
 
 ```{r}
@@ -26,7 +27,7 @@ uswages <-uswages
 str(uswages)
 hist(uswages$wage)
 plotHist <- function(columns,bin,colours){
-  par(mfrow = c(4,3))   #Histogram plots to visualize the distribution of the variables.
+  par(mfrow = c(4,3))   # Histogram plots to visualize the distribution of the variables
   for (i in columns) {
     hist(uswages[,i], main = paste("Histogram of ", names(uswages)[i]),
          nclass = bin, las = 1, col = colours, 
@@ -55,16 +56,28 @@ grid.arrange(A,B,C,D,E,G,H,I,J,nrow =3,ncol = 3)
 ```
 
 ```{r}
+# Linear regression
 fit <- lm(wage ~ educ + exper, data=uswages)
 summary(fit)
 ```
 
 ```{r}
+ols_test_f(fit)
+```
+
+```{r}
+# Residuals vs Fitted plot
+model_fit <- fortify(fit)
+(qplot(.fitted, .resid, data = model_fit) + geom_hline(yintercept = 0, linetype = "dashed") + labs(title = "Residuals vs Fitted", x = "Fitted", y = "Residuals") + geom_smooth(color = "red", se = F))
+```
+
+```{r}
+# Approximate test of nonconstant error variance
 summary(lm(abs(residuals(fit)) ~ fitted(fit)))
 ```
 
 ```{r}
-# create region, a factor variable based on the four regions ne, mw, so, we
+# Create region, a factor variable based on the four regions ne, mw, so, we
 uswages <- data.frame(uswages,
                       region =
                         1*uswages$ne +
@@ -74,10 +87,10 @@ uswages <- data.frame(uswages,
 uswages$region <- factor(uswages$region)
 levels(uswages$region) <- c("ne","mw","so","we")
 
-# analyse influence of region
+# Analyse influence of region
 m1 = lm(wage ~ educ + exper, data= uswages)
-
 m2 = lm(wage ~region + educ + exper , data= uswages)
+
 sse.sm = deviance(m1)
 df.sm = df.residual(m1)
 
