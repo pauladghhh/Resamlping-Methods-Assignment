@@ -1,5 +1,5 @@
 ---
-title: "Exercise 3 - Non-parametric Bootstrap"
+title: "Exercise 4 - Free study"
 author: "Paula Dominguez Gomez"
 date: "`r Sys.Date()`"
 output:
@@ -105,5 +105,32 @@ f.ratio_model2
 
 p.value1=pf(f.ratio_model2,df.sm-df.bg,df.bg,lower.tail = FALSE)
 p.value1
+```
+
+```{r}
+### Bootstrap CI - Simple method:
+data <- uswages$wage
+mean_prediction <- mean(data)
+cat("Mean wage:\n")
+mean_prediction
+n <-length(data)
+nb <- 10000
+mean <- numeric(nb)
+for(i in 1:nb){ 
+  zb <- sample(data,n,replace=T)
+  mean[i] <- mean(zb)
+}
+cat("Bootstrap estimate:\n")
+mean(mean)
+cat("CI by Simple Method:\n")
+2*mean_prediction-quantile(mean,0.975)
+2*mean_prediction-quantile(mean,0.025)
+boxplot(mean)
+hist(mean)
+```
+
+```{r}
+max(uswages$wage)
+min(uswages$wage)
 ```
 
